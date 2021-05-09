@@ -44,63 +44,64 @@ class Board:
         """
         pass
 
-    def get_options(self, from_sq):
+    def get_options(self, matrix, from_sq):
         row = from_sq[0]
         col = from_sq[1]
+        width = len(matrix)  # Square boards only!!!
         options = []
 
         # to the right
-        for j in range(col + 1, self.width):
-            if self.matrix[row][j] == 0:
+        for j in range(col + 1, width):
+            if matrix[row][j] == 0:
                 options.append([row, j])
             else:
                 break
 
         # to the left
         for j in range(col - 1, -1, -1):
-            if self.matrix[row][j] == 0:
+            if matrix[row][j] == 0:
                 options.append([row, j])
             else:
                 break
 
         # down
-        for i in range(row + 1, self.width):
-            if self.matrix[i][col] == 0:
+        for i in range(row + 1, width):
+            if matrix[i][col] == 0:
                 options.append([i, col])
             else:
                 break
 
         # up
         for i in range(row - 1, -1, -1):
-            if self.matrix[i][col] == 0:
+            if matrix[i][col] == 0:
                 options.append([i, col])
             else:
                 break
 
         # upleft
         for offset in range(1, min(row, col) + 1):
-            if self.matrix[row - offset][col - offset] == 0:
+            if matrix[row - offset][col - offset] == 0:
                 options.append([row - offset, col - offset])
             else:
                 break
 
         # upright
-        for offset in range(1, min(row, self.width - col - 1) + 1):
-            if self.matrix[row - offset][col + offset] == 0:
+        for offset in range(1, min(row, width - col - 1) + 1):
+            if matrix[row - offset][col + offset] == 0:
                 options.append([row - offset, col + offset])
             else:
                 break
 
         # downleft
-        for offset in range(1, min(self.width - row - 1, col) + 1):
-            if self.matrix[row + offset][col - offset] == 0:
+        for offset in range(1, min(width - row - 1, col) + 1):
+            if matrix[row + offset][col - offset] == 0:
                 options.append([row + offset, col - offset])
             else:
                 break
 
         # downright
-        for offset in range(1, min(self.width - row - 1, self.width - col - 1) + 1):
-            if self.matrix[row + offset][col + offset] == 0:
+        for offset in range(1, min(width - row - 1, width - col - 1) + 1):
+            if matrix[row + offset][col + offset] == 0:
                 options.append([row + offset, col + offset])
             else:
                 break
@@ -131,49 +132,49 @@ class Board:
     def check_if_ended(self):
         pieces = self.get_pieces(self.turn)
         for piece in pieces:
-            if len(self.get_options(piece)) > 0:
+            if len(self.get_options(self.matrix, piece)) > 0:
                 return False
 
         self.winner = "white" if self.turn == "black" else "black"
         return True
 
     def next_board_states(self):
-        pass
+        """
+        Give a board state (matrix), calculates all the possible next board states
+        """
+        n_fires = np.sum(self.matrix == 3)
+        whites_turn = ((n_fires % 2) == 0)
 
+        if whites_turn:
+            pieces = [[i, j] for i, j in zip(range(0, self.width),range(0, self.width)) if self.matrix[i][j] == 1]
+        else:
+            pieces = [[i, j] for i, j in zip(range(0, self.width),range(0, self.width)) if self.matrix[i][j] == 2]
 
-class RandomPlayer:
-    def __init__(self, board, color):
-        self.board = board
-        self.color = color
+        boards = []
+        for p in pieces:
+            options_step1 = self.get_options(self.matrix, p)
+            mv_boards_p = self.get_move_boards(self.matrix, p, options_step1)
+            for j, mv_board in enumerate(mv_boards_p):
+                options_step2 = self.get_options(mv_board, options_step1[j])
+                shoot_boards = self.get_shoot_boards(mv_board, options_step2)
+                boards += shoot_boards
+        return boards
 
-    def move(self):
-        # grab a white piece
-        pieces = self.board.get_pieces(self.color)
-        options = []  # (piece, option)
-
-        for piece in pieces:
-            options += [[piece, opt] for opt in self.board.get_options(piece)]
-
-        choice = random.choice(options)
-        self.board.move(choice[0], choice[1])
-
-        # shoot
-        shoot_options = self.board.get_options(choice[1])
-        shoot_choice = random.choice(shoot_options)
-        self.board.shoot(shoot_choice)
-
-
-def play_a_game(board, player1, player2):
-    turn = 0
-    players = [player1, player2]
-
-    end = False
-    while not end:
-        players[turn].move()
-        turn = 1 - turn
-
-        end = board.check_if_ended()
-
-    print(board.matrix)
-    print(f"Winner is {board.winner}")
-    board.plot_board()
+    def get_move_boards(self, matrix, p, piece_options):
+        boards = []
+        color = matrix[p[0], p[1]]
+        for opt in piece_options:
+            new_board = matrix.copy()
+            new_board[p[0], p[1]] = 0
+            new_board[opt[0], opt[1]] = color
+            boards.append(new_board)
+            
+        return boards
+            
+    def get_shoot_boards(self, matrix, shoot_options):
+        boards = []
+        for opt in shoot_options:
+            new_board = matrix.copy()
+            new_board[opt[0], opt[1]] =3
+            boards.append(new_board)
+        return boards
