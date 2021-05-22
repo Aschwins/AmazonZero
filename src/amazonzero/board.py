@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import random
 from matplotlib.colors import ListedColormap
 
-TURN = ['white', 'black']
-
 colormap = {'white': 1, 'black': 2}
 
 
@@ -19,8 +17,15 @@ class Board:
         self.width = width
         self.n_amazons = n_amazons
         self.matrix = self.create_board()
-        self.turn = 'white'
         self.winner = None
+
+    def is_whites_turn(self) -> bool:
+        """ 
+        Returns wethers it's whites turn.
+        """
+        n_fires = np.sum(self.matrix == 3)
+        whites_turn = ((n_fires % 2) == 0)
+        return whites_turn
 
     def create_board(self):
         matrix = np.zeros(shape=(self.width, self.width))
@@ -33,16 +38,6 @@ class Board:
         plt.imshow(self.matrix, cmap=ListedColormap(['white', 'beige', 'black', 'red']))
         plt.axis("off")
         plt.show()
-
-    def available_squares(self, color='white'):
-        """
-        Calculates the number of available squares.
-
-
-        :param color:
-        :return:
-        """
-        pass
 
     def get_options(self, matrix, from_sq):
         row = from_sq[0]
@@ -108,13 +103,6 @@ class Board:
 
         return options
 
-    def next_turn(self):
-        "Sets the board to the next turn"
-
-        ix = TURN.index(self.turn)
-        next_turn = TURN[(ix + 1) % 2]
-        self.turn = next_turn
-
     def move(self, from_sq, to_sq):
         piece = self.matrix[from_sq[0], from_sq[1]]
         self.matrix[from_sq[0], from_sq[1]] = 0
@@ -122,33 +110,33 @@ class Board:
 
     def shoot(self, sq):
         self.matrix[sq[0], sq[1]] = 3
-        self.next_turn()
 
     def get_pieces(self, color):
-        pieces = [[i, j] for i in range(0, self.width) for j in range(0, self.width) \
-                  if self.matrix[i][j] == colormap.get(color)]
+        # set up a coordinate grid to walk over
+        x, y = np.meshgrid(range(0, self.width), range(0,self.width))
+        coords = list(zip(x.flatten(), y.flatten()))
+        col_code = colormap.get(color)
+
+        pieces = [[i, j] for i, j in coords if self.matrix[i][j] == col_code]
+
         return pieces
 
     def check_if_ended(self):
-        pieces = self.get_pieces(self.turn)
+        whites_turn = self.is_whites_turn()
+        pieces = self.get_pieces('white') if whites_turn else self.get_pieces('black')
         for piece in pieces:
             if len(self.get_options(self.matrix, piece)) > 0:
                 return False
 
-        self.winner = "white" if self.turn == "black" else "black"
+        self.winner = "black" if whites_turn else "white"
         return True
 
     def next_board_states(self):
         """
         Give a board state (matrix), calculates all the possible next board states
         """
-        n_fires = np.sum(self.matrix == 3)
-        whites_turn = ((n_fires % 2) == 0)
-
-        if whites_turn:
-            pieces = [[i, j] for i, j in zip(range(0, self.width),range(0, self.width)) if self.matrix[i][j] == 1]
-        else:
-            pieces = [[i, j] for i, j in zip(range(0, self.width),range(0, self.width)) if self.matrix[i][j] == 2]
+        whites_turn = self.is_whites_turn()
+        pieces = self.get_pieces('white') if whites_turn else self.get_pieces('black')
 
         boards = []
         for p in pieces:
