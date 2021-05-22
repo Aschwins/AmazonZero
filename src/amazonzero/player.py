@@ -30,6 +30,8 @@ class Actor:
         # TODO: Check edge case. What if next_board_states is 1d??
         # TODO: This assumes the model has a classes_ attribute, which is 
         #       not always true.
+
+        # TODO: Do monte carlo move sampling with additional depth
         return next_board_state
 
     
@@ -55,6 +57,7 @@ class Predictor:
         self.board_width = board_width
         self.memory = memory or np.zeros((max_mem, board_width**2+1))
         self.mem_size = 0
+        self.fitted = False
         
     def predict(self, boardstate):
         """
@@ -82,6 +85,7 @@ class Predictor:
 
         X, y = Xy[:, :-1], Xy[:, -1]
         self.model.fit(X, y)
+        self.fitted = True
     
     def memorize(self, games):
         """
