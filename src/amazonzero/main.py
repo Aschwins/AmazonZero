@@ -1,25 +1,29 @@
 import random
 import tqdm
 import numpy as np
+import time
 
 from sklearn.ensemble import RandomForestClassifier
 from amazonzero.player import Predictor, Actor
 from amazonzero.board import Board
 
-def play_a_game(board, player1, player2):
+def play_a_game(board, player1, player2, plot=False):
     turn = 0
     players = [player1, player2]
 
     end = False
     while not end:
-        players[turn].move()
+        next_board = players[turn].move(board)
         turn = 1 - turn
 
+        board.matrix = next_board
         end = board.check_if_ended()
 
-    print(board.matrix)
-    print(f"Winner is {board.winner}")
-    board.plot_board()
+    # print(board.matrix)
+    # print(f"Winner is {board.winner}")
+    if plot:
+        board.plot_board()
+    return board.winner
 
 
 def main():
