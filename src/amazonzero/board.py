@@ -1,10 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import random
-from matplotlib.colors import ListedColormap
 
 colormap = {'white': 1, 'black': 2}
-
 
 class Board:
     """
@@ -35,9 +31,7 @@ class Board:
         return matrix
 
     def plot_board(self):
-        plt.imshow(self.matrix, cmap=ListedColormap(['white', 'beige', 'black', 'red']))
-        plt.axis("off")
-        plt.show()
+        pass
 
     def get_options(self, matrix, from_sq):
         row = from_sq[0]

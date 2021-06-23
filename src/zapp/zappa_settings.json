@@ -4,7 +4,8 @@
         "aws_region": "eu-west-1",
         "profile_name": "default",
         "project_name": "app",
-        "runtime": "python3.8",
-        "s3_bucket": "zappa-u591kl8s6"
+        "runtime": "python3.7",
+        "s3_bucket": "zappa-u591kl8s6",
+        "slim_handler": true
     }
 }
