@@ -34,10 +34,16 @@ class Actor:
         # TODO: Do monte carlo move sampling with additional depth
         return next_board_state
 
-    
+    def heuristic_move(self, board):
+        is_whites_turn = board.is_whites_turn()
+        opp_pieces = board.get_pieces('black') if is_whites_turn else board.get_pieces('white')
+
+        next_boardstates = board.next_board_states()
+        n_moves_next_boardstates = [(b, sum([len(list(board.get_options(b, p))) for p in opp_pieces])) for b in next_boardstates]
+        #print(n_moves_next_boardstates)
+        ix = np.argmin([a for _, a in n_moves_next_boardstates])
+        return n_moves_next_boardstates[ix][0]
         
-        
-    
 class Predictor:
     """
     The AmazonZero predictor class. 
@@ -127,3 +133,10 @@ class ForestPlayer:
 
     def move(self, board):
         return self.actor.move(board, self.predictor, depth=1)
+
+class HeuristicPlayer:
+    def __init__(self, actor):
+        self.actor = actor
+    
+    def move(self, board):
+        return self.actor.heuristic_move(board)
